@@ -47,7 +47,7 @@ spring:
           socket-timeout: 5000
           connection-timeout: 8000
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: iot-core.mervyn.com.cn:9092
     producer:
       retries: 0
       batch-size: 16384
