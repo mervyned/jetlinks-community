@@ -45,6 +45,11 @@ public class MqMessage {
                 payload = getStatusJson(message, null);
             }
         }
+        // 设备注册
+        else if (message instanceof DeviceRegisterMessage) {
+            topic = getRegisterTopic(message, null);
+            payload = getRegisterJson(message, null);
+        }
         // 子设备消息上报
         else if (message instanceof ChildDeviceMessage) {
             Message msg = ((ChildDeviceMessage) message).getChildDeviceMessage();
@@ -77,6 +82,12 @@ public class MqMessage {
                     topic = getStatusTopic(message, childMessage);
                     payload = getStatusJson(message, childMessage);
                 }
+            }
+            // 子设备注册
+            else if (msg instanceof DeviceRegisterMessage) {
+                DeviceRegisterMessage childMessage = (DeviceRegisterMessage) msg;
+                topic = getRegisterTopic(message, childMessage);
+                payload = getRegisterJson(message, childMessage);
             }
         }
 
@@ -201,6 +212,45 @@ public class MqMessage {
             jsonObject.put("deviceId", msg.getDeviceId());
             //jsonObject.put("messageId", msg.getMessageId());
             jsonObject.put("timestamp", msg.getTimestamp());
+            return jsonObject.toJSONString();
+        }
+        return "";
+    }
+
+    /**
+     * 设备注册topic
+     *
+     * @param gatewayMessage
+     * @param deviceMessage
+     * @return
+     */
+    private String getRegisterTopic(DeviceMessage gatewayMessage, DeviceMessage deviceMessage) {
+        String gatewayId = gatewayMessage.getDeviceId();
+        String productId = gatewayMessage.getHeaderOrDefault(Headers.productId);
+        if (StringUtils.isNotEmpty(productId)) {
+            if (deviceMessage == null) {
+                return String.format("/smarthome/abox/%s/%s/register", productId, gatewayId);
+            } else {
+                return String.format("/smarthome/abox/%s/%s/child/%s/register", productId, gatewayId, deviceMessage.getDeviceId());
+            }
+        }
+        return "";
+    }
+
+    /**
+     * 设备注册json
+     *
+     * @param gatewayMessage
+     * @param deviceMessage
+     * @return
+     */
+    private String getRegisterJson(DeviceMessage gatewayMessage, DeviceMessage deviceMessage) {
+        if (deviceMessage != null) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("deviceId", deviceMessage.getDeviceId());
+            jsonObject.put("messageId", deviceMessage.getMessageId());
+            jsonObject.put("timestamp", deviceMessage.getTimestamp());
+            jsonObject.put("headers", deviceMessage.getHeaders());
             return jsonObject.toJSONString();
         }
         return "";
